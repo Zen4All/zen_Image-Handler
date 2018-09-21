@@ -1,6 +1,6 @@
 <?php
 /**
- * mod Image Handler 4.3.3
+ * mod Image Handler 5.0.1
  * functions_bmz_image_handler.php
  * html_output hook function and additional image referencing functions for
  * backwards compatibility, parsing of configuration settings
@@ -62,6 +62,10 @@ $ihConf['large']['bg'] = ihValidateBackground('large');
 //
 // rrr:ggg:bbb[ transparent]
 //
+// or
+//
+// transparent
+//
 // where the rrr/ggg/bbb values can range from 0 to 255.
 //
 // If an invalid specification is found, log an error and reset to 'transparent 255:255:255'.
@@ -76,7 +80,7 @@ function ihValidateBackground($which_background)
     
     $background_error = false;
     if (!is_array($rgb_values) || count($rgb_values) != 3) {
-        $background_error = true;
+        $background_error = ($background != '');
     } else {
         foreach ($rgb_values as $rgb_value) {
             if (preg_match('/^[0-9]{1,3}$/', $rgb_value) == 0 || $rgb_value > 255) {
@@ -107,7 +111,7 @@ function handle_image($src, $alt, $width, $height, $parameters)
         }
     } else {
         // default to standard Zen-Cart fallback behavior for large -> medium -> small images
-        $image_ext = substr($src, strrpos($src, '.'));
+        $image_ext = '.' . pathinfo($src, PATHINFO_EXTENSION);
         $image_base = substr($src, strlen(DIR_WS_IMAGES), -strlen($image_ext));
         if (strrpos($src, IMAGE_SUFFIX_LARGE) && !is_file(DIR_FS_CATALOG . $src)) {
             //large image wanted but not found

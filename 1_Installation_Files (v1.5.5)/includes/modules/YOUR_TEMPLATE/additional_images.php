@@ -13,7 +13,7 @@
 if (!defined('IS_ADMIN_FLAG')) {
     die('Illegal Access');
 }
-$zco_notifier->notify('NOTIFY_MODULES_ADDITIONAL_PRODUCT_IMAGES_START');
+$GLOBALS['zco_notifier']->notify('NOTIFY_MODULES_ADDITIONAL_PRODUCT_IMAGES_START');
 
 if (!defined('IMAGE_ADDITIONAL_DISPLAY_LINK_EVEN_WHEN_NO_LARGE')) define('IMAGE_ADDITIONAL_DISPLAY_LINK_EVEN_WHEN_NO_LARGE','Yes');
 $images_array = array();
@@ -45,20 +45,15 @@ if ($products_image != '' && $flag_show_product_info_additional_images != 0) {
     if ($dir = @dir($products_image_directory)) {
         while ($file = $dir->read()) {
             if (!is_dir($products_image_directory . $file)) {
-                
-//-bof-image_handler-lat9  *** 1 of 4 ***
-//                if (substr($file, strrpos($file, '.')) == $file_extension) {
-//                    if(preg_match('/\Q' . $products_image_base . '\E/i', $file) == 1) {
-//                        if ($file != $products_image) {
                 // -----
                 // Some additional-image-display plugins (like Fual Slimbox) have some additional checks to see
-                // if the file is "valid"; this notifier "accomodates" that processing, providing these parameters:
+                // if the file is "valid"; this notifier "accommodates" that processing, providing these parameters:
                 //
                 // $p1 ... (r/o) ... An array containing the variables identifying the current image.
                 // $p2 ... (r/w) ... A boolean indicator, set to true by any observer to note that the image is "acceptable".
                 //
                 $current_image_match = false;
-                $zco_notifier->notify(
+                $GLOBALS['zco_notifier']->notify(
                     'NOTIFY_MODULES_ADDITIONAL_IMAGES_FILE_MATCH',
                     array(
                         'file' => $file,
@@ -69,9 +64,8 @@ if ($products_image != '' && $flag_show_product_info_additional_images != 0) {
                     $current_image_match
                 );
                 if ($current_image_match || substr($file, strrpos($file, '.')) == $file_extension) {
-                    if ($current_image_match || preg_match('/\Q' . $products_image_base . '\E/i', $file) == 1) {
+                    if ($current_image_match || preg_match('/' . preg_quote($products_image_base, '/') . '/i', $file) == 1) {
                         if ($current_image_match || $file != $products_image) {
-//-eof-image_handler-lat9  *** 1 of 4 ***
                             if ($products_image_base . str_replace($products_image_base, '', $file) == $file) {
                                 //  echo 'I AM A MATCH ' . $file . '<br>';
                                 $images_array[] = $file;
@@ -90,7 +84,7 @@ if ($products_image != '' && $flag_show_product_info_additional_images != 0) {
     }
 }
 
-$zco_notifier->notify('NOTIFY_MODULES_ADDITIONAL_PRODUCT_IMAGES_LIST', NULL, $images_array);
+$GLOBALS['zco_notifier']->notify('NOTIFY_MODULES_ADDITIONAL_PRODUCT_IMAGES_LIST', NULL, $images_array);
 
 
 // Build output based on images found
@@ -111,15 +105,13 @@ if ($num_images > 0) {
         $file = $images_array[$i];
         $products_image_large = str_replace(DIR_WS_IMAGES, DIR_WS_IMAGES . 'large/', $products_image_directory) . str_replace($products_image_extension, '', $file) . IMAGE_SUFFIX_LARGE . $products_image_extension;
 
-//-bof-image_handler-lat9  *** 2 of 4 ***
         // -----
         // This notifier lets any image-handler know the current image being processed, providing the following parameters:
         //
         // $p1 ... (r/o) ... The current product's name
         // $p2 ... (r/w) ... The (possibly updated) filename (including path) of the current additional image.
         //
-        $zco_notifier->notify('NOTIFY_MODULES_ADDITIONAL_IMAGES_GET_LARGE', $products_name, $products_image_large);
-//-eof-image_handler-lat9  *** 2 of 4 ***
+        $GLOBALS['zco_notifier']->notify('NOTIFY_MODULES_ADDITIONAL_IMAGES_GET_LARGE', $products_name, $products_image_large);
 
         $flag_has_large = file_exists($products_image_large);
         $products_image_large = ($flag_has_large ? $products_image_large : $products_image_directory . $file);
@@ -127,7 +119,6 @@ if ($num_images > 0) {
         $base_image = $products_image_directory . $file;
         $thumb_slashes = zen_image(addslashes($base_image), addslashes($products_name), SMALL_IMAGE_WIDTH, SMALL_IMAGE_HEIGHT);
         
-//-bof-image_handler-lat9  *** 3 of 4 ***
         // -----
         // This notifier lets any image-handler "massage" the name of the current thumbnail image name (with appropriate
         // slashes for javascript/jQuery display):
@@ -135,38 +126,40 @@ if ($num_images > 0) {
         // $p1 ... (n/a) ... An empty array, not applicable.
         // $p2 ... (r/w) ... A reference to the "slashed" thumbnail image name.
         //
-        $zco_notifier->notify('NOTIFY_MODULES_ADDITIONAL_IMAGES_THUMB_SLASHES', array(), $thumb_slashes);
-//-eof-image_handler-lat9  *** 3 of 4 ***
+        $GLOBALS['zco_notifier']->notify('NOTIFY_MODULES_ADDITIONAL_IMAGES_THUMB_SLASHES', array(), $thumb_slashes);
 
         $thumb_regular = zen_image($base_image, $products_name, SMALL_IMAGE_WIDTH, SMALL_IMAGE_HEIGHT);
         $large_link = zen_href_link(FILENAME_POPUP_IMAGE_ADDITIONAL, 'pID=' . $_GET['products_id'] . '&pic=' . $i . '&products_image_large_additional=' . $products_image_large);
 
         // Link Preparation:
-//-bof-image_handler-lat9  *** 4 of 4 ***
         // -----
         // This notifier gives notice that an additional image's script link is requested.  A monitoring observer sets
         // the $p2 value to boolean true if it has provided an alternate form of that link; otherwise, the base code will
         // create that value.
         //
-        // $p1 ... (r/o) ... An associative array, containing the 'flag_display_large', 'products_name', 'products_image_large' and 'thumb_slashes' values.
+        // $p1 ... (r/o) ... An associative array, containing the 'flag_display_large', 'products_name', 'products_image_large', 'thumb_slashes' and current 'index' values.
         // $p2 ... (r/w) ... A reference to the $script_link value, set here to boolean false; if an observer modifies that value, the
         //                     this module's processing is bypassed.
+        // $p3 ... (r/w) ... A reference to the $link_parameters value, which defines the parameters associated with the above
+        //                     link's display.  If the $script_link is updated, these parameters will be used for the display.
         //
         $script_link = false;
-        $zco_notifier->notify(
+        $link_parameters = 'class="additionalImages centeredContent back"' . ' ' . 'style="width:' . $col_width . '%;"';
+        $GLOBALS['zco_notifier']->notify(
             'NOTIFY_MODULES_ADDITIONAL_IMAGES_SCRIPT_LINK',
             array(
                 'flag_display_large' => $flag_display_large,
                 'products_name' => $products_name,
                 'products_image_large' => $products_image_large,
-                'thumb_slashes' => $thumb_slashes
+                'thumb_slashes' => $thumb_slashes,
+                'index' => $i
             ),
-            $script_link
+            $script_link,
+            $link_parameters
         );
         if ($script_link === false) {
             $script_link = '<script type="text/javascript"><!--' . "\n" . 'document.write(\'' . ($flag_display_large ? '<a href="javascript:popupWindow(\\\'' . str_replace($products_image_large, urlencode(addslashes($products_image_large)), $large_link) . '\\\')">' . $thumb_slashes . '<br />' . TEXT_CLICK_TO_ENLARGE . '</a>' : $thumb_slashes) . '\');' . "\n" . '//--></script>';
         }
-//-eof-image_handler-lat9  *** 4 of 4 ***
 
         $noscript_link = '<noscript>' . ($flag_display_large ? '<a href="' . zen_href_link(FILENAME_POPUP_IMAGE_ADDITIONAL, 'pID=' . $_GET['products_id'] . '&pic=' . $i . '&products_image_large_additional=' . $products_image_large) . '" target="_blank">' . $thumb_regular . '<br /><span class="imgLinkAdditional">' . TEXT_CLICK_TO_ENLARGE . '</span></a>' : $thumb_regular ) . '</noscript>';
 
@@ -177,7 +170,7 @@ if ($num_images > 0) {
 
         // List Box array generation:
         $list_box_contents[$row][$col] = array(
-            'params' => 'class="additionalImages centeredContent back"' . ' ' . 'style="width:' . $col_width . '%;"',
+            'params' => $link_parameters,
              'text' => "\n      " . $link
         );
         $col++;
@@ -188,4 +181,4 @@ if ($num_images > 0) {
     } // end for loop
 } // endif
 
-$zco_notifier->notify('NOTIFY_MODULES_ADDITIONAL_PRODUCT_IMAGES_END');
+$GLOBALS['zco_notifier']->notify('NOTIFY_MODULES_ADDITIONAL_PRODUCT_IMAGES_END');
