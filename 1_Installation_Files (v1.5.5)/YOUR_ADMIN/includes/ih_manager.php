@@ -217,6 +217,12 @@ if ($action == 'save') {
             $new_main_image = true;
             if (!empty($_POST['imgBase'])) {
                 $data['imgBase'] = $_POST['imgBase'];
+                if (!empty($uploaded_default_extension)) {
+                    $data['imgExtension'] = $uploaded_default_extension;
+                } else {
+                    $messageStack->add(TEXT_MSG_NO_FILE_UPLOADED, 'error');
+                    $data_ok = false;
+                }
             } else {
                 if (empty($_FILES['default_image']['name'])) {
                     $messageStack->add(TEXT_MSG_AUTO_BASE_ERROR, 'error');
@@ -301,19 +307,19 @@ if ($action == 'save') {
             $data_ok = false;
             break;
     }
-
-    // -----
-    // Correct some "nasty" characters in the image's name.
-    //
-    if (strpos($data['imgBase'], '+') !== false) {
-        $data['imgBase'] = str_replace('+', '-', $data['imgBase']);
-        $messageStack->add(TEXT_MSG_AUTO_REPLACE . $data['imgBase'], 'warning');
-    }
     
     // -----
     // If the data supplied appears OK, perform a couple of pre-processing checks.
     //
     if ($data_ok) {
+        // -----
+        // Correct some "nasty" characters in the image's name.
+        //
+        if (strpos($data['imgBase'], '+') !== false) {
+            $data['imgBase'] = str_replace('+', '-', $data['imgBase']);
+            $messageStack->add(TEXT_MSG_AUTO_REPLACE . $data['imgBase'], 'warning');
+        }
+        
         // -----
         // If the image's base-directory doesn't currently end in either a / or \, append a / to that value.
         //
@@ -454,7 +460,7 @@ if ($action == 'quick_delete') {
 // Delete a specified product image.
 //
 if ($action == 'delete') {
-    if (!empty($_POST['imgSuffix']) || $_POST['delete_from_db_only'] != 'Y') {
+    if (!empty($_POST['imgSuffix']) || empty($_POST['delete_from_db_only'])) {
         $base_name = $products_image_directory . $_POST['imgName'];
         $image_ext = $_POST['imgExtension'];
 

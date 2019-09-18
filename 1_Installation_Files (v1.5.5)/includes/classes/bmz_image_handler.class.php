@@ -62,8 +62,8 @@ class ih_image
         
         $this->orig = $src;
         $this->src = $src;
-        $this->width = (int)$width;
-        $this->height = (int)$height;
+        $this->width = $width;
+        $this->height = $height;
         $this->zoom = array();
         $this->watermark = array();
         
@@ -182,7 +182,7 @@ class ih_image
             $this->sizetype = 'large';
         } elseif (strpos($this->src, $ihConf['medium']['suffix']) !== false) {
             $this->sizetype = 'medium';
-        } elseif ((intval($this->width) == intval($ihConf['small']['width'])) && (intval($this->height) == intval($ihConf['small']['height']))) {
+        } elseif (((int)$this->width) == ((int)$ihConf['small']['width']) && (((int)$this->height) == ((int)$ihConf['small']['height']))) {
             $this->sizetype = 'small';
         } else {
             $this->sizetype = 'generic';
@@ -362,6 +362,8 @@ class ih_image
             $file_mtime = $this->fileModifiedTime($this->filename);
             $watermark_mtime = $this->fileModifiedTime($this->watermark['file']);
             $zoom_mtime = $this->fileModifiedTime($this->zoom['file']);
+            $this->ihLog("get_resized_image: $local, $local_mtime, {$this->filename}, $file_mtime, $watermark_mtime, $zoom_mtime");
+            $this->ihLog(date("F d Y H:i:s.", $local_mtime) . ', ' . date("F d Y H:i:s.", $file_mtime));
             if (($local_mtime > $file_mtime && $local_mtime > $watermark_mtime && $local_mtime > $zoom_mtime) ||
                 $this->resize_imageIM($file_extension, $local, $background, $quality) ||
                 $this->resize_imageGD($file_extension, $local, $background, $quality) ) {
@@ -436,11 +438,11 @@ class ih_image
                 // calculate new dimension in pixels
                 if ($pref_width !== '' && $pref_height !== '') {
                     // different factors for width and height
-                    $hscale = intval($pref_width) / 100;
-                    $vscale = intval($pref_height) / 100;
+                    $hscale = (int)($pref_width) / 100;
+                    $vscale = (int)($pref_height) / 100;
                 } else {
                     // one of the the preferred values has the scaling factor
-                    $hscale = intval($pref_width . $pref_height) / 100;
+                    $hscale = (int)($pref_width . $pref_height) / 100;
                     $vscale = $hscale;
                 }
                 $newwidth = floor($width * $hscale);
@@ -448,8 +450,8 @@ class ih_image
             } else {
                 $this->force_canvas = (strpos($pref_width . $pref_height, '!') !== false); 
                 // failsafe for old zen-cart configuration one image dimension set to 0
-                $pref_width = intval($pref_width);
-                $pref_height = intval($pref_height);
+                $pref_width = (int)$pref_width;
+                $pref_height = (int)$pref_height;
                 if (!$this->force_canvas && $pref_width != 0 && $pref_height != 0) {
                     // if no '!' is appended to dimensions we don't force the canvas size to
                     // match the preferred size. the image will not have the exact specified size.
@@ -471,7 +473,7 @@ class ih_image
                     // image dimensions are calculated to fit the preferred width
                     $pref_height = floor($height * ($pref_width / $width));
                 }
-                if ($pref_width > 0 && $pref_height > 0 && ($pref_width < $width || $pref_height < $height)) {
+                if ($pref_width > 0 && $pref_height > 0 && ($this->force_canvas || $pref_width < $width || $pref_height < $height)) {
                     // only calculate new dimensions if we have sane values
                     $newwidth = $pref_width;
                     $newheight = $pref_height;
@@ -479,6 +481,7 @@ class ih_image
             }
         }
         $resize = ($newwidth != $width || $newheight != $height);
+        $this->ihLog("calculate_size ($width, $height), ($pref_width, $pref_height), returning ($newwidth, $newheight, $resize)");
         return array($newwidth, $newheight, $resize);
     }
     
@@ -590,7 +593,7 @@ class ih_image
             imagealphablending($background, false);
         }
     
-        $threshold = ($threshold != '') ? intval(127 * intval($threshold) / 100) : -1;
+        $threshold = ($threshold != '') ? (int)(127 * ((int)$threshold) / 100) : -1;
     
         for ($x=0; $x < $newwidth; $x++) {
             for ($y=0; $y < $newheight; $y++) {
@@ -745,7 +748,7 @@ class ih_image
     
         $alpha = $transparent ? 127 : 0;
         if ($color) {
-            $background_color = imagecolorallocatealpha($newimg, intval($color['r']), intval($color['g']), intval($color['b']), $alpha);
+            $background_color = imagecolorallocatealpha($newimg, (int)$color['r'], (int)$color['g'], (int)$color['b'], $alpha);
         } else {
             $background_color = imagecolorallocatealpha($newimg, 255, 255, 255, $alpha);
         }
@@ -844,6 +847,7 @@ class ih_image
         if ($quality < 0 || $quality > 100) {
             $quality = 75;
         }
+        $this->ihLog("save_imageGD($file_ext, $image, $dest_name, $quality)");
         switch (strtolower($file_ext)) {
             case '.gif':
                 if (!function_exists('imagegif')) {
@@ -892,16 +896,23 @@ class ih_image
         $bg = trim(str_replace('transparent', '', $bg));
         list($red, $green, $blue)= preg_split('/[, :]/', $bg);
         if (preg_match('/[0-9]+/', $red.$green.$blue)) {
-            $red = min(intval($red), 255);
-            $green = min(intval($green), 255);
-            $blue = min(intval($blue), 255);
-            $color = array('r'=>$red, 'g'=>$green, 'b'=>$blue);
+            $red = min((int)$red, 255);
+            $green = min((int)$green, 255);
+            $blue = min((int)$blue, 255);
+            $color = array('r' => $red, 'g' => $green, 'b' => $blue);
         }
         return $color;
     }
         
     public function get_additional_parameters($alt, $width, $height, $parameters) 
     {
+        // -----
+        // If the "Small images: Zoom on hover" setting has been enabled, add the magic
+        // that causes the imagehover.js to show those images on hover.
+        //
+        // Note: This functionality will be removed in the next primary release (i.e. 5.2.0)
+        // of Image Handler, replaced with simply an 'ih-zoom' class definition!
+        //
         global $ihConf;
         if ($this->sizetype == 'small') {
             if ($ihConf['small']['zoom']) {
@@ -925,13 +936,16 @@ class ih_image
                 // additional zoom functionality
                 $pathinfo = pathinfo($src);
                 $base_image_directory = $ihConf['dir']['images'];
+                if (in_array(substr($base_image_directory, -1), array('/', '\\'))) {
+                    $base_image_directory = substr($base_image_directory, 0, -1);
+                }
                 $base_imagedir_len = strlen($base_image_directory);
                 $products_image_directory = (strpos($pathinfo['dirname'], $base_image_directory) === 0) ? substr($pathinfo['dirname'], $base_imagedir_len) : $pathinfo['dirname'];
                 $products_image_directory .= DIRECTORY_SEPARATOR;
                 $products_image_filename = $pathinfo['filename'];
                 
                 $this->ihLog("get_additional_parameters($alt, $width, $height, $parameters), base_dir = '$base_image_directory', zoom_sizetype = '$zoom_sizetype', product_dir = '$products_image_directory'" . var_export($pathinfo, true));
-                $products_image_zoom = $base_image_directory . $zoom_sizetype . '/' . $products_image_directory . $products_image_filename . $ihConf[$zoom_sizetype]['suffix'] . $this->extension;
+                $products_image_zoom = $ihConf['dir']['images'] . $zoom_sizetype . '/' . $products_image_directory . $products_image_filename . $ihConf[$zoom_sizetype]['suffix'] . $this->extension;
                 
                 $ih_zoom_image = new ih_image($products_image_zoom, $ihConf[$zoom_sizetype]['width'], $ihConf[$zoom_sizetype]['height']);
                 $products_image_zoom = $ih_zoom_image->get_local();
