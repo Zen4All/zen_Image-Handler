@@ -160,9 +160,6 @@ div.managerbox {clear: both;}
 </style>
 <script src="includes/menu.js"></script>
 <script src="includes/general.js"></script>
-<link rel="stylesheet" type="text/css" href="includes/javascript/spiffyCal/spiffyCal_v2_1.css">
-<script src="includes/javascript/spiffyCal/spiffyCal_v2_1.js"></script>
-
 <script>
   <!--
   function init()
@@ -183,7 +180,6 @@ div.managerbox {clear: both;}
 </script>
 </head>
 <body onload="init();">
-<div id="spiffycalendar" class="text"></div>
 <!-- header //-->
 <?php require(DIR_WS_INCLUDES . 'header.php'); ?>
 <!-- header_eof //-->
@@ -357,6 +353,7 @@ if ($ih_page == 'manager') {
         <tr>
             <td><?php echo TEXT_PRODUCT_INFO; ?></td>
             <td><?php echo '#' . $pInfo->products_id . ' &mdash; ' . $pInfo->products_name; ?></td>
+            
         </tr>
 <?php 
         if ($pInfo->products_model != '') {
@@ -380,16 +377,17 @@ if ($ih_page == 'manager') {
 ?>
     </table>
     <table border="0" width="100%" cellspacing="0" cellpadding="2">
+        <caption class="ih-center"><?php echo TEXT_TABLE_CAPTION_INSTRUCTIONS; ?></caption>
         <tr>
             <td class="ih-vtop"><table border="0" width="100%" cellspacing="0" cellpadding="2">
                 <tr class="dataTableHeadingRow">
-                    <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_PHOTO_NAME; ?></td>
-                    <td class="dataTableHeadingContent"><?php echo TABLE_HEADING_FILETYPE; ?></td><?php //added nigel ?>
-                    <td class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_BASE_SIZE; ?></td>
-                    <td class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_SMALL_SIZE; ?></td>
-                    <td class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_MEDIUM_SIZE; ?></td>
-                    <td class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_LARGE_SIZE; ?></td>
-                    <td class="dataTableHeadingContent ih-right"><?php echo TABLE_HEADING_ACTION; ?>&nbsp;</td>
+                    <th class="dataTableHeadingContent"><?php echo TABLE_HEADING_PHOTO_NAME; ?></th>
+                    <th class="dataTableHeadingContent"><?php echo TABLE_HEADING_FILETYPE; ?></th><?php //added nigel ?>
+                    <th class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_BASE_SIZE; ?></th>
+                    <th class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_SMALL_SIZE; ?></th>
+                    <th class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_MEDIUM_SIZE; ?></th>
+                    <th class="dataTableHeadingContent ih-center"><?php echo TABLE_HEADING_LARGE_SIZE; ?></th>
+                    <th class="dataTableHeadingContent ih-right"><?php echo TABLE_HEADING_ACTION; ?>&nbsp;</th>
                 </tr>
 <?php
         $count = count($products_image_match_array);
@@ -495,7 +493,7 @@ if ($ih_page == 'manager') {
 <?php
             if (!$main_image) {
 ?>
-                    <td class="dataTableContent ih-center">&mdash;</td>
+                    <td class="dataTableContent ih-center"><?php echo TEXT_NOT_NEEDED; ?></td>
 <?php
             } else {
                 $preview_image = $tmp_image_medium_preview->get_resized_image(IMAGE_SHOPPING_CART_WIDTH, IMAGE_SHOPPING_CART_HEIGHT, 'generic');
