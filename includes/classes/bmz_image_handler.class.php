@@ -1,6 +1,6 @@
 <?php
 /**
- * mod Image Handler 5.3.2
+ * mod Image Handler 5.3.3
  * bmz_image_handler.class.php
  * IH5 class for image manipulation
  *
@@ -766,8 +766,8 @@ class ih_image
             $newwidth = $this->canvas['width'];
             $newheight = $this->canvas['height'];
         }
-        $startwidth = (int)($this->canvas['width'] - $newwidth) / 2;
-        $startheight = (int)($this->canvas['height'] - $newheight) / 2;
+        $startwidth = (int)(($this->canvas['width'] - $newwidth) / 2);
+        $startheight = (int)(($this->canvas['height'] - $newheight) / 2);
 
         if ($ihConf['gdlib'] > 1 && function_exists("imagecreatetruecolor")) {
             $tmpimg = imagecreatetruecolor($newwidth, $newheight);
